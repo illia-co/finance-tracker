@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useBalanceVisibility } from '@/contexts/BalanceVisibilityContext'
 
 interface Transaction {
   id: string
@@ -29,6 +30,7 @@ interface CategoryTransactionsProps {
 export default function CategoryTransactions({ assetType, categoryName, refreshTrigger }: CategoryTransactionsProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const { isBalanceVisible } = useBalanceVisibility()
 
   useEffect(() => {
     fetchTransactions()
@@ -48,6 +50,9 @@ export default function CategoryTransactions({ assetType, categoryName, refreshT
   }
 
   const formatCurrency = (amount: number) => {
+    if (!isBalanceVisible) {
+      return '••••••'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'EUR',
@@ -77,13 +82,13 @@ export default function CategoryTransactions({ assetType, categoryName, refreshT
 
   const getTransactionTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      deposit: 'text-green-600 bg-green-50',
-      withdrawal: 'text-red-600 bg-red-50',
-      buy: 'text-blue-600 bg-blue-50',
-      sell: 'text-orange-600 bg-orange-50',
-      dividend: 'text-purple-600 bg-purple-50'
+      deposit: 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20',
+      withdrawal: 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20',
+      buy: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20',
+      sell: 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20',
+      dividend: 'text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-900/20'
     }
-    return colors[type] || 'text-gray-600 bg-gray-50'
+    return colors[type] || 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-800'
   }
 
   const getAssetDisplayName = (transaction: Transaction) => {
@@ -122,22 +127,19 @@ export default function CategoryTransactions({ assetType, categoryName, refreshT
 
   return (
     <div className="card">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         {categoryName} Transactions
       </h3>
       
       {!transactions || transactions.length === 0 ? (
         <div className="text-center py-8">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <span className="text-gray-400 text-2xl">•</span>
-          </div>
-          <p className="text-gray-500">No transactions yet</p>
-          <p className="text-sm text-gray-400 mt-1">Add your first transaction using the "Transaction" button above</p>
+          <p className="text-gray-500 dark:text-gray-400">No transactions yet</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Add your first transaction using the "Transaction" button above</p>
         </div>
       ) : (
         <div className="space-y-3">
           {transactions.map((transaction) => (
-            <div key={transaction.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div key={transaction.id} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-gray-200 dark:border-gray-600">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
@@ -182,8 +184,8 @@ export default function CategoryTransactions({ assetType, categoryName, refreshT
                 <div className="text-right">
                   <div className={`text-lg font-semibold ${
                     transaction.type === 'deposit' || transaction.type === 'buy' || transaction.type === 'dividend' 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-red-600 dark:text-red-400'
                   }`}>
                     {transaction.type === 'deposit' || transaction.type === 'buy' || transaction.type === 'dividend' ? '+' : '-'}
                     {formatCurrency(transaction.amount)}

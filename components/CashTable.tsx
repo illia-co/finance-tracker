@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import TransactionModal from './TransactionModal'
 import CategoryTransactions from './CategoryTransactions'
+import ConfirmModal from './ConfirmModal'
+import { useBalanceVisibility } from '@/contexts/BalanceVisibilityContext'
 
 interface Cash {
   id: string
@@ -25,6 +27,9 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
   const [selectedCash, setSelectedCash] = useState<Cash | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [cashToDelete, setCashToDelete] = useState<string | null>(null)
+  const { isBalanceVisible } = useBalanceVisibility()
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
@@ -32,6 +37,9 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
   })
 
   const formatCurrency = (amount: number, currency: string = 'EUR') => {
+    if (!isBalanceVisible) {
+      return '••••••'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
@@ -96,11 +104,16 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
     setRefreshTrigger(prev => prev + 1)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this cash entry?')) return
+  const handleDelete = (id: string) => {
+    setCashToDelete(id)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!cashToDelete) return
 
     try {
-      const response = await fetch(`/api/cash/${id}`, {
+      const response = await fetch(`/api/cash/${cashToDelete}`, {
         method: 'DELETE',
       })
 
@@ -109,6 +122,9 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
       }
     } catch (error) {
       console.error('Error deleting cash:', error)
+    } finally {
+      setShowDeleteModal(false)
+      setCashToDelete(null)
     }
   }
 
@@ -118,8 +134,8 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Cash</h2>
-          <p className="text-gray-500">Total: {formatCurrency(totalAmount)}</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cash</h2>
+          <p className="text-gray-500 dark:text-gray-400">Total: {formatCurrency(totalAmount)}</p>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -131,13 +147,13 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
 
       {showAddForm && (
         <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {editingCash ? 'Edit Cash Entry' : 'Add New Cash Entry'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Name/Description
                 </label>
                 <input
@@ -150,7 +166,7 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Amount
                 </label>
                 <input
@@ -163,7 +179,7 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Currency
                 </label>
                 <select
@@ -210,37 +226,45 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
               </tr>
             </thead>
             <tbody>
-              {cash?.map((cashItem) => (
-                <tr key={cashItem.id}>
-                  <td className="font-medium">{cashItem.name}</td>
-                  <td className="font-medium">
-                    {formatCurrency(cashItem.amount, cashItem.currency)}
-                  </td>
-                  <td>{cashItem.currency}</td>
-                  <td>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleAddTransaction(cashItem)}
-                        className="btn-primary text-sm"
-                      >
-                        Transaction
-                      </button>
-                      <button
-                        onClick={() => handleEdit(cashItem)}
-                        className="btn-secondary text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cashItem.id)}
-                        className="btn-danger text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
+              {cash && cash.length > 0 ? (
+                cash.map((cashItem) => (
+                  <tr key={cashItem.id}>
+                    <td className="font-medium">{cashItem.name}</td>
+                    <td className="font-medium">
+                      {formatCurrency(cashItem.amount, cashItem.currency)}
+                    </td>
+                    <td>{cashItem.currency}</td>
+                    <td>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleAddTransaction(cashItem)}
+                          className="btn-primary text-sm"
+                        >
+                          Transaction
+                        </button>
+                        <button
+                          onClick={() => handleEdit(cashItem)}
+                          className="btn-secondary text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cashItem.id)}
+                          className="btn-danger text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="text-center py-8 text-gray-500">
+                    No cash entries found. Add your first cash entry to get started.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -264,6 +288,19 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
         categoryName="Cash"
         refreshTrigger={refreshTrigger}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <ConfirmModal
+          type="danger"
+          title="Delete Cash Entry"
+          message="Are you sure you want to delete this cash entry? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDelete}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   )
 }

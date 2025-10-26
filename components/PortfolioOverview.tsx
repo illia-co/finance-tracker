@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useBalanceVisibility } from '@/contexts/BalanceVisibilityContext'
 
 interface PortfolioData {
   total: number
@@ -19,6 +20,7 @@ interface PortfolioOverviewProps {
 
 export default function PortfolioOverview({ data, onRefresh }: PortfolioOverviewProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const { isBalanceVisible } = useBalanceVisibility()
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -27,6 +29,9 @@ export default function PortfolioOverview({ data, onRefresh }: PortfolioOverview
   }
 
   const formatCurrency = (amount: number) => {
+    if (!isBalanceVisible) {
+      return '••••••'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'EUR',
@@ -43,6 +48,25 @@ export default function PortfolioOverview({ data, onRefresh }: PortfolioOverview
       <div className="card">
         <div className="text-center py-8">
           <p className="text-gray-500">Loading portfolio data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if portfolio is empty (all values are 0)
+  const isPortfolioEmpty = data.total === 0 && 
+    data.breakdown.accounts === 0 && 
+    data.breakdown.investments === 0 && 
+    data.breakdown.crypto === 0 && 
+    data.breakdown.cash === 0
+
+  if (isPortfolioEmpty) {
+    return (
+      <div className="card">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Portfolio Data</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">Start building your portfolio by adding your first assets</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Go to Bank Accounts, Investments, Crypto, or Cash tabs to get started</p>
         </div>
       </div>
     )
@@ -80,7 +104,7 @@ export default function PortfolioOverview({ data, onRefresh }: PortfolioOverview
       {/* Total Portfolio Value */}
       <div className="card">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Total Portfolio Value</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Total Portfolio Value</h2>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
@@ -89,10 +113,10 @@ export default function PortfolioOverview({ data, onRefresh }: PortfolioOverview
             {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
           </button>
         </div>
-        <div className="text-4xl font-bold text-primary-600 mb-2">
+        <div className="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">
           {formatCurrency(data.total)}
         </div>
-        <p className="text-gray-500">Last updated: {new Date().toLocaleString()}</p>
+        <p className="text-gray-500 dark:text-gray-400">Last updated: {new Date().toLocaleString()}</p>
       </div>
 
       {/* Portfolio Breakdown */}
@@ -100,13 +124,13 @@ export default function PortfolioOverview({ data, onRefresh }: PortfolioOverview
         {categories.map((category) => (
           <div key={category.name} className="card">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{category.name}</h3>
               <div className={`w-4 h-4 rounded-full ${category.color}`}></div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               {formatCurrency(category.value)}
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               {category.percentage}% of total
             </div>
           </div>
@@ -115,7 +139,7 @@ export default function PortfolioOverview({ data, onRefresh }: PortfolioOverview
 
       {/* Portfolio Distribution Chart */}
       <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Portfolio Distribution</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Portfolio Distribution</h3>
         <div className="space-y-3">
           {categories.map((category) => (
             <div key={category.name} className="flex items-center">
@@ -124,12 +148,12 @@ export default function PortfolioOverview({ data, onRefresh }: PortfolioOverview
               </div>
               <div className="flex-1">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-700">{category.name}</span>
-                  <span className="text-gray-900 font-medium">
+                  <span className="text-gray-700 dark:text-gray-300">{category.name}</span>
+                  <span className="text-gray-900 dark:text-gray-100 font-medium">
                     {formatCurrency(category.value)} ({category.percentage}%)
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-1">
                   <div
                     className={`h-2 rounded-full ${category.color}`}
                     style={{ width: `${category.percentage}%` }}

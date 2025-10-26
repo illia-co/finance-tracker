@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import TransactionModal from './TransactionModal'
 import CategoryTransactions from './CategoryTransactions'
 import AssetSearch from './AssetSearch'
 import ConfirmModal from './ConfirmModal'
 import AlertModal from './AlertModal'
+import { useBalanceVisibility } from '@/contexts/BalanceVisibilityContext'
 
 interface Investment {
   id: string
@@ -38,6 +40,7 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info')
+  const { isBalanceVisible } = useBalanceVisibility()
   const [formData, setFormData] = useState({
     symbol: '',
     name: '',
@@ -48,6 +51,9 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
   })
 
   const formatCurrency = (amount: number) => {
+    if (!isBalanceVisible) {
+      return '••••••'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'EUR',
@@ -184,10 +190,10 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Investments</h2>
-          <div className="flex space-x-4 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Investments</h2>
+          <div className="flex space-x-4 text-gray-500 dark:text-gray-400">
             <span>Total Value: {formatCurrency(totalValue)}</span>
-            <span className={totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+            <span className={totalGainLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
               Gain/Loss: {formatCurrency(totalGainLoss)}
             </span>
           </div>
@@ -202,13 +208,13 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
 
       {showAddForm && (
         <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {editingInvestment ? 'Edit Investment' : 'Add New Investment'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Search Stock
                 </label>
                 <AssetSearch
@@ -227,7 +233,7 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Total Amount (EUR)
                 </label>
                 <input
@@ -243,7 +249,7 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Or specify shares manually
                 </label>
                 <input
@@ -259,7 +265,7 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Dividends Received
                 </label>
                 <input
@@ -308,52 +314,60 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
               </tr>
             </thead>
             <tbody>
-              {investments?.map((investment) => {
-                const gainLoss = calculateGainLoss(investment)
-                const gainLossPercentage = calculateGainLossPercentage(investment)
-                const currentValue = investment.totalValue || investment.shares * investment.purchasePrice
+              {investments && investments.length > 0 ? (
+                investments.map((investment) => {
+                  const gainLoss = calculateGainLoss(investment)
+                  const gainLossPercentage = calculateGainLossPercentage(investment)
+                  const currentValue = investment.totalValue || investment.shares * investment.purchasePrice
 
-                return (
-                  <tr key={investment.id}>
-                    <td className="font-medium">{investment.symbol}</td>
-                    <td>{investment.name}</td>
-                    <td>{investment.shares.toFixed(2)}</td>
-                    <td>{formatCurrency(investment.purchasePrice)}</td>
-                    <td>
-                      {investment.currentPrice ? formatCurrency(investment.currentPrice) : 'N/A'}
-                    </td>
-                    <td className="font-medium">{formatCurrency(currentValue)}</td>
-                    <td>
-                      <div className={gainLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        <div className="font-medium">{formatCurrency(gainLoss)}</div>
-                        <div className="text-sm">({gainLossPercentage.toFixed(2)}%)</div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleAddTransaction(investment)}
-                          className="btn-primary text-sm"
-                        >
-                          Transaction
-                        </button>
-                        <button
-                          onClick={() => handleEdit(investment)}
-                          className="btn-secondary text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(investment.id)}
-                          className="btn-danger text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
+                  return (
+                    <tr key={investment.id}>
+                      <td className="font-medium">{investment.symbol}</td>
+                      <td>{investment.name}</td>
+                      <td>{investment.shares.toFixed(2)}</td>
+                      <td>{formatCurrency(investment.purchasePrice)}</td>
+                      <td>
+                        {investment.currentPrice ? formatCurrency(investment.currentPrice) : 'N/A'}
+                      </td>
+                      <td className="font-medium">{formatCurrency(currentValue)}</td>
+                      <td>
+                        <div className={gainLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                          <div className="font-medium">{formatCurrency(gainLoss)}</div>
+                          <div className="text-sm">({gainLossPercentage.toFixed(2)}%)</div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleAddTransaction(investment)}
+                            className="btn-primary text-sm"
+                          >
+                            Transaction
+                          </button>
+                          <button
+                            onClick={() => handleEdit(investment)}
+                            className="btn-secondary text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(investment.id)}
+                            className="btn-danger text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-gray-500">
+                    No investments found. Add your first investment to get started.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -379,25 +393,29 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
       />
 
       {/* Confirm Delete Modal */}
-      <ConfirmModal
-        isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        onConfirm={confirmDelete}
-        title="Delete Investment"
-        message="Are you sure you want to delete this investment? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-      />
+      {showConfirmModal && typeof window !== 'undefined' && createPortal(
+        <ConfirmModal
+          type="danger"
+          title="Delete Investment"
+          message="Are you sure you want to delete this investment? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDelete}
+          onClose={() => setShowConfirmModal(false)}
+        />,
+        document.body
+      )}
 
       {/* Alert Modal */}
-      <AlertModal
-        isOpen={showAlertModal}
-        onClose={() => setShowAlertModal(false)}
-        title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
-        message={alertMessage}
-        type={alertType}
-      />
+      {showAlertModal && (
+        <AlertModal
+          type={alertType}
+          title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
+          message={alertMessage}
+          buttonText="OK"
+          onClose={() => setShowAlertModal(false)}
+        />
+      )}
     </div>
   )
 }

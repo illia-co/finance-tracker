@@ -114,29 +114,29 @@ export default function AssetSearch({ onSelect, type, placeholder }: AssetSearch
       
       {loading && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600 dark:border-primary-400"></div>
         </div>
       )}
 
       {showResults && results.length > 0 && (
         <div 
           ref={resultsRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
         >
           {results.map((asset, index) => (
             <div
               key={`${asset.symbol}-${index}`}
               onClick={() => handleSelect(asset)}
-              className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
-                index === selectedIndex ? 'bg-primary-50' : ''
+              className={`px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                index === selectedIndex ? 'bg-primary-50 dark:bg-primary-900/20' : ''
               }`}
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-medium text-gray-900">{asset.name}</div>
-                  <div className="text-sm text-gray-500">{asset.symbol}</div>
+                  <div className="font-medium text-gray-900 dark:text-white">{asset.name}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{asset.symbol}</div>
                 </div>
-                <div className="text-xs text-gray-400">{asset.exchange}</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500">{asset.exchange}</div>
               </div>
             </div>
           ))}
@@ -144,8 +144,8 @@ export default function AssetSearch({ onSelect, type, placeholder }: AssetSearch
       )}
 
       {showResults && results.length === 0 && !loading && query.length >= 2 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="px-4 py-3 text-gray-500 text-center">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <div className="px-4 py-3 text-gray-500 dark:text-gray-400 text-center">
             No {type === 'stocks' ? 'stocks' : 'crypto'} found
           </div>
         </div>

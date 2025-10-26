@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import AlertModal from './AlertModal'
 
 interface Transaction {
   id: string
@@ -34,6 +35,8 @@ export default function TransactionModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
   const [isLoadingPrice, setIsLoadingPrice] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
+  const [alertMessage, setAlertMessage] = useState('')
   const [formData, setFormData] = useState({
     type: '',
     amount: '',
@@ -135,7 +138,8 @@ export default function TransactionModal({
       } else {
         const errorData = await response.json()
         console.error('Transaction creation failed:', errorData)
-        alert('Failed to create transaction: ' + (errorData.error || 'Unknown error'))
+        setAlertMessage('Failed to create transaction: ' + (errorData.error || 'Unknown error'))
+        setShowAlert(true)
       }
     } catch (error) {
       console.error('Error creating transaction:', error)
@@ -161,15 +165,15 @@ export default function TransactionModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Add Transaction - {assetName}
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Transaction Type
             </label>
             <select
@@ -188,7 +192,7 @@ export default function TransactionModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Amount (EUR)
             </label>
             <input
@@ -200,7 +204,7 @@ export default function TransactionModal({
               placeholder="Enter total amount in EUR"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Enter the total amount you want to invest/spend. Quantity will be calculated automatically.
             </p>
           </div>
@@ -221,13 +225,13 @@ export default function TransactionModal({
                     }}
                     className="mr-2"
                   />
-                  <label htmlFor="useCustomPrice" className="text-sm font-medium text-gray-700">
+                  <label htmlFor="useCustomPrice" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Use custom price
                   </label>
                 </div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Price per Unit (EUR)
-                  {!useCustomPrice && isLoadingPrice && <span className="text-blue-500 ml-2">Loading...</span>}
+                  {!useCustomPrice && isLoadingPrice && <span className="text-blue-500 dark:text-blue-400 ml-2">Loading...</span>}
                 </label>
                 <input
                   type="number"
@@ -238,7 +242,7 @@ export default function TransactionModal({
                   required
                   readOnly={!useCustomPrice && currentPrice !== null}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {useCustomPrice 
                     ? 'Enter the price at which you bought/sold this asset'
                     : 'Current market price (automatically fetched)'
@@ -246,7 +250,7 @@ export default function TransactionModal({
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Quantity (Calculated)
                 </label>
                 <input
@@ -269,7 +273,7 @@ export default function TransactionModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description (Optional)
             </label>
             <input
@@ -282,7 +286,7 @@ export default function TransactionModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Date
             </label>
             <input
@@ -312,6 +316,17 @@ export default function TransactionModal({
           </div>
         </form>
       </div>
+
+      {/* Alert Modal */}
+      {showAlert && (
+        <AlertModal
+          type="error"
+          title="Error"
+          message={alertMessage}
+          buttonText="OK"
+          onClose={() => setShowAlert(false)}
+        />
+      )}
     </div>
   )
 }

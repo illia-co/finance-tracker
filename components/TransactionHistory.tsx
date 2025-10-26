@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useBalanceVisibility } from '@/contexts/BalanceVisibilityContext'
 
 interface Transaction {
   id: string
@@ -23,6 +24,7 @@ interface TransactionHistoryProps {
 export default function TransactionHistory({ assetType, assetId, assetName }: TransactionHistoryProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const { isBalanceVisible } = useBalanceVisibility()
 
   useEffect(() => {
     fetchTransactions()
@@ -43,6 +45,9 @@ export default function TransactionHistory({ assetType, assetId, assetName }: Tr
   }
 
   const formatCurrency = (amount: number) => {
+    if (!isBalanceVisible) {
+      return '••••••'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -66,11 +71,11 @@ export default function TransactionHistory({ assetType, assetId, assetName }: Tr
 
   const getTransactionTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      deposit: 'text-green-600',
-      withdrawal: 'text-red-600',
-      buy: 'text-blue-600',
-      sell: 'text-orange-600',
-      dividend: 'text-purple-600'
+      deposit: 'text-green-600 dark:text-green-400',
+      withdrawal: 'text-red-600 dark:text-red-400',
+      buy: 'text-blue-600 dark:text-blue-400',
+      sell: 'text-orange-600 dark:text-orange-400',
+      dividend: 'text-purple-600 dark:text-purple-400'
     }
     return colors[type] || 'text-gray-600'
   }
@@ -92,16 +97,16 @@ export default function TransactionHistory({ assetType, assetId, assetName }: Tr
 
   return (
     <div className="card">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         Transaction History - {assetName}
       </h3>
       
       {!transactions || transactions.length === 0 ? (
-        <p className="text-gray-500 text-center py-4">No transactions yet</p>
+        <p className="text-gray-500 dark:text-gray-400 text-center py-4">No transactions yet</p>
       ) : (
         <div className="space-y-3">
           {transactions.map((transaction) => (
-            <div key={transaction.id} className="border rounded-lg p-3">
+            <div key={transaction.id} className="border rounded-lg p-3 border-gray-200 dark:border-gray-600">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">

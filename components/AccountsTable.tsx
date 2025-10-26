@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import TransactionModal from './TransactionModal'
 import CategoryTransactions from './CategoryTransactions'
+import ConfirmModal from './ConfirmModal'
+import { useBalanceVisibility } from '@/contexts/BalanceVisibilityContext'
 
 interface Account {
   id: string
@@ -26,6 +28,9 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [accountToDelete, setAccountToDelete] = useState<string | null>(null)
+  const { isBalanceVisible } = useBalanceVisibility()
   const [formData, setFormData] = useState({
     name: '',
     bank: '',
@@ -34,6 +39,9 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
   })
 
   const formatCurrency = (amount: number, currency: string = 'EUR') => {
+    if (!isBalanceVisible) {
+      return '••••••'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
@@ -99,11 +107,16 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
     setRefreshTrigger(prev => prev + 1)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this account?')) return
+  const handleDelete = (id: string) => {
+    setAccountToDelete(id)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!accountToDelete) return
 
     try {
-      const response = await fetch(`/api/accounts/${id}`, {
+      const response = await fetch(`/api/accounts/${accountToDelete}`, {
         method: 'DELETE',
       })
 
@@ -112,6 +125,9 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
       }
     } catch (error) {
       console.error('Error deleting account:', error)
+    } finally {
+      setShowDeleteModal(false)
+      setAccountToDelete(null)
     }
   }
 
@@ -121,8 +137,8 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Bank Accounts</h2>
-          <p className="text-gray-500">Total: {formatCurrency(totalBalance)}</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Bank Accounts</h2>
+          <p className="text-gray-500 dark:text-gray-400">Total: {formatCurrency(totalBalance)}</p>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -134,13 +150,13 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
 
       {showAddForm && (
         <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {editingAccount ? 'Edit Account' : 'Add New Account'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Account Name
                 </label>
                 <input
@@ -152,7 +168,7 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Bank
                 </label>
                 <input
@@ -164,7 +180,7 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Balance
                 </label>
                 <input
@@ -177,7 +193,7 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Currency
                 </label>
                 <select
@@ -224,38 +240,40 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
               </tr>
             </thead>
             <tbody>
-              {accounts?.map((account) => (
-                <tr key={account.id}>
-                  <td className="font-medium">{account.name}</td>
-                  <td>{account.bank}</td>
-                  <td className="font-medium">
-                    {formatCurrency(account.balance, account.currency)}
-                  </td>
-                  <td>{account.currency}</td>
-                  <td>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleAddTransaction(account)}
-                        className="btn-primary text-sm"
-                      >
-                        Transaction
-                      </button>
-                      <button
-                        onClick={() => handleEdit(account)}
-                        className="btn-secondary text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(account.id)}
-                        className="btn-danger text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )) || (
+              {accounts && accounts.length > 0 ? (
+                accounts.map((account) => (
+                  <tr key={account.id}>
+                    <td className="font-medium">{account.name}</td>
+                    <td>{account.bank}</td>
+                    <td className="font-medium">
+                      {formatCurrency(account.balance, account.currency)}
+                    </td>
+                    <td>{account.currency}</td>
+                    <td>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleAddTransaction(account)}
+                          className="btn-primary text-sm"
+                        >
+                          Transaction
+                        </button>
+                        <button
+                          onClick={() => handleEdit(account)}
+                          className="btn-secondary text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(account.id)}
+                          className="btn-danger text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan={5} className="text-center py-8 text-gray-500">
                     No accounts found. Add your first account to get started.
@@ -285,6 +303,19 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
         categoryName="Bank Accounts"
         refreshTrigger={refreshTrigger}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <ConfirmModal
+          type="danger"
+          title="Delete Bank Account"
+          message="Are you sure you want to delete this bank account? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDelete}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   )
 }

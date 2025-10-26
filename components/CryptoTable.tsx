@@ -6,6 +6,7 @@ import CategoryTransactions from './CategoryTransactions'
 import AssetSearch from './AssetSearch'
 import ConfirmModal from './ConfirmModal'
 import AlertModal from './AlertModal'
+import { useBalanceVisibility } from '@/contexts/BalanceVisibilityContext'
 
 interface Crypto {
   id: string
@@ -37,6 +38,7 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info')
+  const { isBalanceVisible } = useBalanceVisibility()
   const [formData, setFormData] = useState({
     symbol: '',
     name: '',
@@ -46,6 +48,9 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
   })
 
   const formatCurrency = (amount: number) => {
+    if (!isBalanceVisible) {
+      return '••••••'
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'EUR',
@@ -180,10 +185,10 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Cryptocurrency</h2>
-          <div className="flex space-x-4 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cryptocurrency</h2>
+          <div className="flex space-x-4 text-gray-500 dark:text-gray-400">
             <span>Total Value: {formatCurrency(totalValue)}</span>
-            <span className={totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+            <span className={totalGainLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
               Gain/Loss: {formatCurrency(totalGainLoss)}
             </span>
           </div>
@@ -198,13 +203,13 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
 
       {showAddForm && (
         <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {editingCrypto ? 'Edit Crypto Asset' : 'Add New Crypto Asset'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Search Cryptocurrency
                 </label>
                 <AssetSearch
@@ -223,7 +228,7 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Total Amount (EUR)
                 </label>
                 <input
@@ -239,7 +244,7 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Or specify amount manually
                 </label>
                 <input
@@ -291,52 +296,60 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
               </tr>
             </thead>
             <tbody>
-              {crypto?.map((cryptoItem) => {
-                const gainLoss = calculateGainLoss(cryptoItem)
-                const gainLossPercentage = calculateGainLossPercentage(cryptoItem)
-                const currentValue = cryptoItem.totalValue || cryptoItem.amount * cryptoItem.purchasePrice
+              {crypto && crypto.length > 0 ? (
+                crypto.map((cryptoItem) => {
+                  const gainLoss = calculateGainLoss(cryptoItem)
+                  const gainLossPercentage = calculateGainLossPercentage(cryptoItem)
+                  const currentValue = cryptoItem.totalValue || cryptoItem.amount * cryptoItem.purchasePrice
 
-                return (
-                  <tr key={cryptoItem.id}>
-                    <td className="font-medium">{cryptoItem.symbol}</td>
-                    <td>{cryptoItem.name}</td>
-                    <td>{cryptoItem.amount.toFixed(2)}</td>
-                    <td>{formatCurrency(cryptoItem.purchasePrice)}</td>
-                    <td>
-                      {cryptoItem.currentPrice ? formatCurrency(cryptoItem.currentPrice) : 'N/A'}
-                    </td>
-                    <td className="font-medium">{formatCurrency(currentValue)}</td>
-                    <td>
-                      <div className={gainLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        <div className="font-medium">{formatCurrency(gainLoss)}</div>
-                        <div className="text-sm">({gainLossPercentage.toFixed(2)}%)</div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleAddTransaction(cryptoItem)}
-                          className="btn-primary text-sm"
-                        >
-                          Transaction
-                        </button>
-                        <button
-                          onClick={() => handleEdit(cryptoItem)}
-                          className="btn-secondary text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(cryptoItem.id)}
-                          className="btn-danger text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
+                  return (
+                    <tr key={cryptoItem.id}>
+                      <td className="font-medium">{cryptoItem.symbol}</td>
+                      <td>{cryptoItem.name}</td>
+                      <td>{cryptoItem.amount.toFixed(2)}</td>
+                      <td>{formatCurrency(cryptoItem.purchasePrice)}</td>
+                      <td>
+                        {cryptoItem.currentPrice ? formatCurrency(cryptoItem.currentPrice) : 'N/A'}
+                      </td>
+                      <td className="font-medium">{formatCurrency(currentValue)}</td>
+                      <td>
+                        <div className={gainLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                          <div className="font-medium">{formatCurrency(gainLoss)}</div>
+                          <div className="text-sm">({gainLossPercentage.toFixed(2)}%)</div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleAddTransaction(cryptoItem)}
+                            className="btn-primary text-sm"
+                          >
+                            Transaction
+                          </button>
+                          <button
+                            onClick={() => handleEdit(cryptoItem)}
+                            className="btn-secondary text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(cryptoItem.id)}
+                            className="btn-danger text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-gray-500">
+                    No cryptocurrency found. Add your first crypto asset to get started.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -362,25 +375,28 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
       />
 
       {/* Confirm Delete Modal */}
-      <ConfirmModal
-        isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        onConfirm={confirmDelete}
-        title="Delete Crypto Asset"
-        message="Are you sure you want to delete this crypto asset? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        type="danger"
-      />
+      {showConfirmModal && (
+        <ConfirmModal
+          type="danger"
+          title="Delete Crypto Asset"
+          message="Are you sure you want to delete this crypto asset? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDelete}
+          onClose={() => setShowConfirmModal(false)}
+        />
+      )}
 
       {/* Alert Modal */}
-      <AlertModal
-        isOpen={showAlertModal}
-        onClose={() => setShowAlertModal(false)}
-        title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
-        message={alertMessage}
-        type={alertType}
-      />
+      {showAlertModal && (
+        <AlertModal
+          type={alertType}
+          title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
+          message={alertMessage}
+          buttonText="OK"
+          onClose={() => setShowAlertModal(false)}
+        />
+      )}
     </div>
   )
 }
