@@ -12,6 +12,10 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:connect": "docker exec -it finance-tracker-postgres-1 psql -U postgres -d finance_tracker",
+    "db:backup": "docker exec finance-tracker-postgres-1 pg_dump -U postgres finance_tracker > backup.sql",
+    "db:restore": "docker exec -i finance-tracker-postgres-1 psql -U postgres -d finance_tracker < backup.sql",
+    "db:reset": "prisma db push --force-reset && npm run db:seed",
     "portfolio:clear": "tsx scripts/clear-portfolio.ts",
     "portfolio:demo": "tsx scripts/demo-data.ts",
     "portfolio:reset": "tsx scripts/clear-portfolio.ts && tsx scripts/demo-data.ts"

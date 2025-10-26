@@ -42,6 +42,7 @@ export default function TransactionModal({
     description: '',
     date: new Date().toISOString().split('T')[0]
   })
+  const [useCustomPrice, setUseCustomPrice] = useState(false)
 
   const transactionTypes = {
     account: [
@@ -88,11 +89,14 @@ export default function TransactionModal({
 
   // Auto-calculate quantity when amount or price changes
   useEffect(() => {
-    if (formData.amount && currentPrice && (formData.type === 'buy' || formData.type === 'sell')) {
-      const quantity = parseFloat(formData.amount) / currentPrice
-      setFormData(prev => ({ ...prev, quantity: quantity.toString() }))
+    if (formData.amount && (currentPrice || formData.price) && (formData.type === 'buy' || formData.type === 'sell')) {
+      const priceToUse = useCustomPrice ? parseFloat(formData.price) : currentPrice
+      if (priceToUse) {
+        const quantity = parseFloat(formData.amount) / priceToUse
+        setFormData(prev => ({ ...prev, quantity: quantity.toString() }))
+      }
     }
-  }, [formData.amount, currentPrice, formData.type])
+  }, [formData.amount, formData.price, currentPrice, formData.type, useCustomPrice])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,7 +113,7 @@ export default function TransactionModal({
           assetType,
           assetId,
           amount: parseFloat(formData.amount),
-          price: formData.price ? parseFloat(formData.price) : undefined,
+          price: formData.price ? parseFloat(formData.price) : (useCustomPrice ? undefined : currentPrice),
           quantity: formData.quantity ? parseFloat(formData.quantity) : undefined,
           description: formData.description,
           date: formData.date
@@ -149,6 +153,8 @@ export default function TransactionModal({
       description: '',
       date: new Date().toISOString().split('T')[0]
     })
+    setCurrentPrice(null) // Reset current price on close
+    setUseCustomPrice(false) // Reset custom price flag
     onClose()
   }
 
@@ -202,9 +208,26 @@ export default function TransactionModal({
           {(formData.type === 'buy' || formData.type === 'sell') && (
             <>
               <div>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    id="useCustomPrice"
+                    checked={useCustomPrice}
+                    onChange={(e) => {
+                      setUseCustomPrice(e.target.checked)
+                      if (!e.target.checked && currentPrice) {
+                        setFormData(prev => ({ ...prev, price: currentPrice.toString() }))
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  <label htmlFor="useCustomPrice" className="text-sm font-medium text-gray-700">
+                    Use custom price
+                  </label>
+                </div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Price per Unit (EUR)
-                  {isLoadingPrice && <span className="text-blue-500 ml-2">Loading...</span>}
+                  Price per Unit (EUR)
+                  {!useCustomPrice && isLoadingPrice && <span className="text-blue-500 ml-2">Loading...</span>}
                 </label>
                 <input
                   type="number"
@@ -213,10 +236,13 @@ export default function TransactionModal({
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   className="input"
                   required
-                  readOnly={currentPrice !== null}
+                  readOnly={!useCustomPrice && currentPrice !== null}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Current market price (automatically fetched)
+                  {useCustomPrice 
+                    ? 'Enter the price at which you bought/sold this asset'
+                    : 'Current market price (automatically fetched)'
+                  }
                 </p>
               </div>
               <div>
@@ -230,11 +256,11 @@ export default function TransactionModal({
                   onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                   className="input"
                   required
-                  readOnly={formData.amount && currentPrice ? true : false}
+                  readOnly={formData.amount && currentPrice && !useCustomPrice ? true : false}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.amount && currentPrice 
-                    ? `Calculated: ${formData.amount} ÷ ${currentPrice} = ${formData.quantity}`
+                  {formData.amount && (currentPrice || formData.price) 
+                    ? `Calculated: ${formData.amount} ÷ ${useCustomPrice ? formData.price : currentPrice} = ${formData.quantity}`
                     : 'Enter amount above to auto-calculate'
                   }
                 </p>

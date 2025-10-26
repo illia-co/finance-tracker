@@ -110,13 +110,14 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
       name: investment.name,
       shares: investment.shares.toString(),
       purchasePrice: investment.purchasePrice.toString(),
-      dividends: investment.dividends.toString()
+      dividends: investment.dividends.toString(),
+      totalAmount: ''
     })
     setShowAddForm(true)
   }
 
   const handleCancel = () => {
-    setFormData({ symbol: '', name: '', shares: '', purchasePrice: '', dividends: '' })
+    setFormData({ symbol: '', name: '', shares: '', purchasePrice: '', dividends: '', totalAmount: '' })
     setShowAddForm(false)
     setEditingInvestment(null)
   }
@@ -174,10 +175,10 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
     }
   }
 
-  const totalValue = investments.reduce((sum, investment) => 
-    sum + (investment.totalValue || investment.shares * investment.purchasePrice), 0)
-  const totalGainLoss = investments.reduce((sum, investment) => 
-    sum + calculateGainLoss(investment), 0)
+  const totalValue = investments?.reduce((sum, investment) => 
+    sum + (investment.totalValue || investment.shares * investment.purchasePrice), 0) || 0
+  const totalGainLoss = investments?.reduce((sum, investment) => 
+    sum + calculateGainLoss(investment), 0) || 0
 
   return (
     <div className="space-y-6">
@@ -307,7 +308,7 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
               </tr>
             </thead>
             <tbody>
-              {investments.map((investment) => {
+              {investments?.map((investment) => {
                 const gainLoss = calculateGainLoss(investment)
                 const gainLossPercentage = calculateGainLossPercentage(investment)
                 const currentValue = investment.totalValue || investment.shares * investment.purchasePrice

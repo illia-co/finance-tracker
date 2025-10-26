@@ -55,8 +55,7 @@ model Cash {
   id          String   @id @default(cuid())
   name        String
   amount      Float
-  currency    String   @default("USD")
-  location    String?
+  currency    String   @default("EUR")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

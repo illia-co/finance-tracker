@@ -9,7 +9,6 @@ interface Cash {
   name: string
   amount: number
   currency: string
-  location?: string
   createdAt: string
   updatedAt: string
 }
@@ -29,8 +28,7 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
-    currency: 'EUR',
-    location: ''
+    currency: 'EUR'
   })
 
   const formatCurrency = (amount: number, currency: string = 'EUR') => {
@@ -60,7 +58,7 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
       })
 
       if (response.ok) {
-        setFormData({ name: '', amount: '', currency: 'USD', location: '' })
+        setFormData({ name: '', amount: '', currency: 'EUR' })
         setShowAddForm(false)
         setEditingCash(null)
         onRefresh()
@@ -74,17 +72,16 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
 
   const handleEdit = (cashItem: Cash) => {
     setEditingCash(cashItem.id)
-    setFormData({
-      name: cashItem.name,
-      amount: cashItem.amount.toString(),
-      currency: cashItem.currency,
-      location: cashItem.location || ''
-    })
+      setFormData({
+        name: cashItem.name,
+        amount: cashItem.amount.toString(),
+        currency: cashItem.currency
+      })
     setShowAddForm(true)
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', amount: '', currency: 'EUR', location: '' })
+    setFormData({ name: '', amount: '', currency: 'EUR' })
     setShowAddForm(false)
     setEditingCash(null)
   }
@@ -115,7 +112,7 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
     }
   }
 
-  const totalAmount = cash.reduce((sum, cashItem) => sum + cashItem.amount, 0)
+  const totalAmount = cash?.reduce((sum, cashItem) => sum + cashItem.amount, 0) || 0
 
   return (
     <div className="space-y-6">
@@ -180,18 +177,6 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
                   <option value="JPY">JPY</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="input"
-                  placeholder="e.g., Home Safe, Wallet"
-                />
-              </div>
             </div>
             <div className="flex space-x-3">
               <button
@@ -221,19 +206,17 @@ export default function CashTable({ cash, onRefresh }: CashTableProps) {
                 <th>Name</th>
                 <th>Amount</th>
                 <th>Currency</th>
-                <th>Location</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {cash.map((cashItem) => (
+              {cash?.map((cashItem) => (
                 <tr key={cashItem.id}>
                   <td className="font-medium">{cashItem.name}</td>
                   <td className="font-medium">
                     {formatCurrency(cashItem.amount, cashItem.currency)}
                   </td>
                   <td>{cashItem.currency}</td>
-                  <td>{cashItem.location || '-'}</td>
                   <td>
                     <div className="flex space-x-2">
                       <button

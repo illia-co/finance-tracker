@@ -105,16 +105,14 @@ async function main() {
       data: {
         name: 'Emergency Fund',
         amount: 1800.00,
-        currency: 'EUR',
-        location: 'Home Safe'
+        currency: 'EUR'
       }
     }),
     prisma.cash.create({
       data: {
         name: 'Travel Money',
         amount: 450.00,
-        currency: 'EUR',
-        location: 'Wallet'
+        currency: 'EUR'
       }
     })
   ])

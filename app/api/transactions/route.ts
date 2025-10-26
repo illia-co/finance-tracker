@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
             case 'cash':
               const cash = await prisma.cash.findUnique({
                 where: { id: transaction.assetId },
-                select: { name: true, location: true }
+                select: { name: true }
               })
-              assetInfo = cash ? { name: cash.name, location: cash.location } : null
+              assetInfo = cash ? { name: cash.name } : null
               break
           }
         } catch (error) {

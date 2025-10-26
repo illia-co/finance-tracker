@@ -15,14 +15,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, amount, currency = 'USD', location } = body
+    const { name, amount, currency = 'EUR' } = body
 
     const cash = await prisma.cash.create({
       data: {
         name,
         amount,
-        currency,
-        location
+        currency
       }
     })
 

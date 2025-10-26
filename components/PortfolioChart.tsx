@@ -79,36 +79,37 @@ export default function PortfolioChart() {
       {
         label: 'Total Portfolio',
         data: history.map(item => item.totalValue),
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: 'rgb(17, 24, 39)', // gray-900 - dark gray for better contrast
+        backgroundColor: 'rgba(17, 24, 39, 0.1)',
         tension: 0.1,
+        borderWidth: 3, // Make it thicker to stand out
       },
       {
         label: 'Bank Accounts',
         data: history.map(item => item.accountsValue),
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        borderColor: 'rgb(59, 130, 246)', // blue-500
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.1,
       },
       {
         label: 'Investments',
         data: history.map(item => item.investmentsValue),
-        borderColor: 'rgb(245, 158, 11)',
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        borderColor: 'rgb(34, 197, 94)', // green-500
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
         tension: 0.1,
       },
       {
         label: 'Crypto',
         data: history.map(item => item.cryptoValue),
-        borderColor: 'rgb(168, 85, 247)',
-        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        borderColor: 'rgb(234, 179, 8)', // yellow-500
+        backgroundColor: 'rgba(234, 179, 8, 0.1)',
         tension: 0.1,
       },
       {
         label: 'Cash',
         data: history.map(item => item.cashValue),
-        borderColor: 'rgb(239, 68, 68)',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: 'rgb(168, 85, 247)', // purple-500
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
         tension: 0.1,
       },
     ],

@@ -115,7 +115,7 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
     }
   }
 
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0)
+  const totalBalance = accounts?.reduce((sum, account) => sum + account.balance, 0) || 0
 
   return (
     <div className="space-y-6">
@@ -224,7 +224,7 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
               </tr>
             </thead>
             <tbody>
-              {accounts.map((account) => (
+              {accounts?.map((account) => (
                 <tr key={account.id}>
                   <td className="font-medium">{account.name}</td>
                   <td>{account.bank}</td>
@@ -255,7 +255,13 @@ export default function AccountsTable({ accounts, onRefresh }: AccountsTableProp
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) || (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                    No accounts found. Add your first account to get started.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

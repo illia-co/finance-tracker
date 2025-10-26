@@ -7,15 +7,14 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { name, amount, currency, location } = body
+    const { name, amount, currency } = body
 
     const cash = await prisma.cash.update({
       where: { id: params.id },
       data: {
         name,
         amount,
-        currency,
-        location
+        currency
       }
     })
 

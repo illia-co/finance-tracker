@@ -106,13 +106,14 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
       symbol: cryptoItem.symbol,
       name: cryptoItem.name,
       amount: cryptoItem.amount.toString(),
-      purchasePrice: cryptoItem.purchasePrice.toString()
+      purchasePrice: cryptoItem.purchasePrice.toString(),
+      totalAmount: ''
     })
     setShowAddForm(true)
   }
 
   const handleCancel = () => {
-    setFormData({ symbol: '', name: '', amount: '', purchasePrice: '' })
+    setFormData({ symbol: '', name: '', amount: '', purchasePrice: '', totalAmount: '' })
     setShowAddForm(false)
     setEditingCrypto(null)
   }
@@ -170,10 +171,10 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
     }
   }
 
-  const totalValue = crypto.reduce((sum, cryptoItem) => 
-    sum + (cryptoItem.totalValue || cryptoItem.amount * cryptoItem.purchasePrice), 0)
-  const totalGainLoss = crypto.reduce((sum, cryptoItem) => 
-    sum + calculateGainLoss(cryptoItem), 0)
+  const totalValue = crypto?.reduce((sum, cryptoItem) => 
+    sum + (cryptoItem.totalValue || cryptoItem.amount * cryptoItem.purchasePrice), 0) || 0
+  const totalGainLoss = crypto?.reduce((sum, cryptoItem) => 
+    sum + calculateGainLoss(cryptoItem), 0) || 0
 
   return (
     <div className="space-y-6">
@@ -290,7 +291,7 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
               </tr>
             </thead>
             <tbody>
-              {crypto.map((cryptoItem) => {
+              {crypto?.map((cryptoItem) => {
                 const gainLoss = calculateGainLoss(cryptoItem)
                 const gainLossPercentage = calculateGainLossPercentage(cryptoItem)
                 const currentValue = cryptoItem.totalValue || cryptoItem.amount * cryptoItem.purchasePrice

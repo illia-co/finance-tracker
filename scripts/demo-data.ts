@@ -13,25 +13,33 @@ async function createDemoData() {
     const accounts = await Promise.all([
       prisma.account.create({
         data: {
-          name: 'Sberbank Main',
-          bank: 'Sberbank',
+          name: 'Deutsche Bank Main',
+          bank: 'Deutsche Bank',
           balance: 25000.00,
           currency: 'EUR'
         }
       }),
       prisma.account.create({
         data: {
-          name: 'Tinkoff Savings',
-          bank: 'Tinkoff Bank',
+          name: 'Commerzbank Savings',
+          bank: 'Commerzbank',
           balance: 15000.00,
           currency: 'EUR'
         }
       }),
       prisma.account.create({
         data: {
-          name: 'VTB Business',
-          bank: 'VTB Bank',
+          name: 'N26 Business',
+          bank: 'N26',
           balance: 8500.00,
+          currency: 'EUR'
+        }
+      }),
+      prisma.account.create({
+        data: {
+          name: 'HSBC International',
+          bank: 'HSBC',
+          balance: 12000.00,
           currency: 'EUR'
         }
       })
@@ -149,24 +157,21 @@ async function createDemoData() {
         data: {
           name: 'Home Safe',
           amount: 2000.00,
-          currency: 'EUR',
-          location: 'Home'
+          currency: 'EUR'
         }
       }),
       prisma.cash.create({
         data: {
           name: 'Emergency Fund',
           amount: 5000.00,
-          currency: 'EUR',
-          location: 'Bank Deposit Box'
+          currency: 'EUR'
         }
       }),
       prisma.cash.create({
         data: {
           name: 'Travel Cash',
           amount: 500.00,
-          currency: 'EUR',
-          location: 'Wallet'
+          currency: 'EUR'
         }
       })
     ])
