@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import SuppressHydrationWarning from '@/components/SuppressHydrationWarning'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,7 +17,47 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Suppress hydration warnings from browser extensions
+              (function() {
+                const originalError = console.error;
+                const originalWarn = console.warn;
+                
+                console.error = function(...args) {
+                  const message = args[0]?.toString() || '';
+                  if (
+                    message.includes('Extra attributes from the server') ||
+                    message.includes('cz-shortcut-listen') ||
+                    message.includes('data-new-gr-c-s-check-loaded') ||
+                    message.includes('data-gr-ext-installed')
+                  ) {
+                    return;
+                  }
+                  originalError.apply(console, args);
+                };
+                
+                console.warn = function(...args) {
+                  const message = args[0]?.toString() || '';
+                  if (
+                    message.includes('Extra attributes from the server') ||
+                    message.includes('cz-shortcut-listen') ||
+                    message.includes('data-new-gr-c-s-check-loaded') ||
+                    message.includes('data-gr-ext-installed')
+                  ) {
+                    return;
+                  }
+                  originalWarn.apply(console, args);
+                };
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={inter.className} suppressHydrationWarning={true}>
+        <SuppressHydrationWarning />
         <div className="min-h-screen bg-gray-50">
           <nav className="bg-white shadow-sm border-b">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

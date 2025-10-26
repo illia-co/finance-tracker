@@ -4,6 +4,8 @@ import { useState } from 'react'
 import TransactionModal from './TransactionModal'
 import CategoryTransactions from './CategoryTransactions'
 import AssetSearch from './AssetSearch'
+import ConfirmModal from './ConfirmModal'
+import AlertModal from './AlertModal'
 
 interface Crypto {
   id: string
@@ -30,6 +32,11 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [selectedAsset, setSelectedAsset] = useState<any>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showAlertModal, setShowAlertModal] = useState(false)
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
+  const [alertMessage, setAlertMessage] = useState('')
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info')
   const [formData, setFormData] = useState({
     symbol: '',
     name: '',
@@ -129,19 +136,37 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
     }))
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this crypto asset?')) return
+  const handleDelete = (id: string) => {
+    setDeleteItemId(id)
+    setShowConfirmModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteItemId) return
 
     try {
-      const response = await fetch(`/api/crypto/${id}`, {
+      const response = await fetch(`/api/crypto/${deleteItemId}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         onRefresh()
+        setAlertMessage('Crypto asset deleted successfully!')
+        setAlertType('success')
+        setShowAlertModal(true)
+      } else {
+        setAlertMessage('Failed to delete crypto asset. Please try again.')
+        setAlertType('error')
+        setShowAlertModal(true)
       }
     } catch (error) {
       console.error('Error deleting crypto:', error)
+      setAlertMessage('An error occurred while deleting the crypto asset.')
+      setAlertType('error')
+      setShowAlertModal(true)
+    } finally {
+      setShowConfirmModal(false)
+      setDeleteItemId(null)
     }
   }
 
@@ -274,7 +299,7 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
                   <tr key={cryptoItem.id}>
                     <td className="font-medium">{cryptoItem.symbol}</td>
                     <td>{cryptoItem.name}</td>
-                    <td>{cryptoItem.amount}</td>
+                    <td>{cryptoItem.amount.toFixed(2)}</td>
                     <td>{formatCurrency(cryptoItem.purchasePrice)}</td>
                     <td>
                       {cryptoItem.currentPrice ? formatCurrency(cryptoItem.currentPrice) : 'N/A'}
@@ -333,6 +358,27 @@ export default function CryptoTable({ crypto, onRefresh }: CryptoTableProps) {
         assetType="crypto"
         categoryName="Cryptocurrency"
         refreshTrigger={refreshTrigger}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Crypto Asset"
+        message="Are you sure you want to delete this crypto asset? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
+        message={alertMessage}
+        type={alertType}
       />
     </div>
   )

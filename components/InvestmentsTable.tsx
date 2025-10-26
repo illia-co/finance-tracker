@@ -4,6 +4,8 @@ import { useState } from 'react'
 import TransactionModal from './TransactionModal'
 import CategoryTransactions from './CategoryTransactions'
 import AssetSearch from './AssetSearch'
+import ConfirmModal from './ConfirmModal'
+import AlertModal from './AlertModal'
 
 interface Investment {
   id: string
@@ -31,6 +33,11 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [selectedAsset, setSelectedAsset] = useState<any>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showAlertModal, setShowAlertModal] = useState(false)
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
+  const [alertMessage, setAlertMessage] = useState('')
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info')
   const [formData, setFormData] = useState({
     symbol: '',
     name: '',
@@ -133,19 +140,37 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
     }))
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this investment?')) return
+  const handleDelete = (id: string) => {
+    setDeleteItemId(id)
+    setShowConfirmModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteItemId) return
 
     try {
-      const response = await fetch(`/api/investments/${id}`, {
+      const response = await fetch(`/api/investments/${deleteItemId}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         onRefresh()
+        setAlertMessage('Investment deleted successfully!')
+        setAlertType('success')
+        setShowAlertModal(true)
+      } else {
+        setAlertMessage('Failed to delete investment. Please try again.')
+        setAlertType('error')
+        setShowAlertModal(true)
       }
     } catch (error) {
       console.error('Error deleting investment:', error)
+      setAlertMessage('An error occurred while deleting the investment.')
+      setAlertType('error')
+      setShowAlertModal(true)
+    } finally {
+      setShowConfirmModal(false)
+      setDeleteItemId(null)
     }
   }
 
@@ -291,7 +316,7 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
                   <tr key={investment.id}>
                     <td className="font-medium">{investment.symbol}</td>
                     <td>{investment.name}</td>
-                    <td>{investment.shares}</td>
+                    <td>{investment.shares.toFixed(2)}</td>
                     <td>{formatCurrency(investment.purchasePrice)}</td>
                     <td>
                       {investment.currentPrice ? formatCurrency(investment.currentPrice) : 'N/A'}
@@ -350,6 +375,27 @@ export default function InvestmentsTable({ investments, onRefresh }: Investments
         assetType="investment"
         categoryName="Investments"
         refreshTrigger={refreshTrigger}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Investment"
+        message="Are you sure you want to delete this investment? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
+        message={alertMessage}
+        type={alertType}
       />
     </div>
   )
