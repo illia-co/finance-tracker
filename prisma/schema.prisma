@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id          String   @id @default(cuid())
+  name        String
+  bank        String
+  balance     Float
+  currency    String   @default("USD")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("accounts")
+}
+
+model Investment {
+  id          String   @id @default(cuid())
+  symbol      String
+  name        String
+  shares      Float
+  purchasePrice Float
+  currentPrice Float?
+  totalValue  Float?
+  dividends   Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("investments")
+}
+
+model Crypto {
+  id          String   @id @default(cuid())
+  symbol      String
+  name        String
+  amount      Float
+  purchasePrice Float
+  currentPrice Float?
+  totalValue  Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("crypto")
+}
+
+model Cash {
+  id          String   @id @default(cuid())
+  name        String
+  amount      Float
+  currency    String   @default("USD")
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("cash")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  type        String   // 'deposit', 'withdrawal', 'buy', 'sell', 'dividend', 'transfer'
+  assetType   String   // 'account', 'investment', 'crypto', 'cash'
+  assetId     String   // ID of the related asset
+  amount      Float
+  price       Float?   // For investments and crypto
+  quantity    Float?   // For investments and crypto
+  description String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("transactions")
+}
+
+model PortfolioHistory {
+  id          String   @id @default(cuid())
+  totalValue  Float
+  date        DateTime @default(now())
+  accountsValue Float
+  investmentsValue Float
+  cryptoValue Float
+  cashValue   Float
+
+  @@map("portfolio_history")
+}
