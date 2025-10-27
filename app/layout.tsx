@@ -20,11 +20,28 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="light">
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Apply theme before page render to prevent FOUC
+              (function() {
+                try {
+                  const savedTheme = localStorage.getItem('finance-tracker-theme');
+                  if (savedTheme === 'dark' || savedTheme === 'light') {
+                    document.documentElement.classList.add(savedTheme);
+                  } else {
+                    // Check system preference
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    document.documentElement.classList.add(prefersDark ? 'dark' : 'light');
+                  }
+                } catch (e) {
+                  // Fallback to light theme if localStorage is not available
+                  document.documentElement.classList.add('light');
+                }
+              })();
+              
               // Suppress hydration warnings from browser extensions
               (function() {
                 const originalError = console.error;

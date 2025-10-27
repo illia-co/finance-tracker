@@ -26,6 +26,8 @@ export default function Home() {
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [tabLoading, setTabLoading] = useState(false)
+  const [showSkeleton, setShowSkeleton] = useState(false)
 
   useEffect(() => {
     // Load saved tab from localStorage
@@ -55,8 +57,21 @@ export default function Home() {
   }
 
   const handleTabChange = (tabId: string) => {
+    setTabLoading(true)
+    setShowSkeleton(false)
     setActiveTab(tabId)
     localStorage.setItem('finance-tracker-active-tab', tabId)
+    
+    // Show skeleton only if loading takes more than 2 seconds
+    const skeletonTimeout = setTimeout(() => {
+      setShowSkeleton(true)
+    }, 2000)
+    
+    // Hide loading state after a short delay
+    setTimeout(() => {
+      setTabLoading(false)
+      clearTimeout(skeletonTimeout)
+    }, 100)
   }
 
   if (loading) {
@@ -109,44 +124,98 @@ export default function Home() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            <PortfolioOverview 
-              data={portfolioData} 
-              onRefresh={refreshData}
-            />
-            {/* Only show chart if portfolio has data */}
-            {portfolioData.total > 0 && <PortfolioChart />}
-          </div>
-        )}
+        <div className="transition-opacity duration-200">
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              <PortfolioOverview 
+                data={portfolioData} 
+                onRefresh={refreshData}
+              />
+              {/* Only show chart if portfolio has data */}
+              {portfolioData.total > 0 && <PortfolioChart />}
+            </div>
+          )}
 
         {activeTab === 'accounts' && (
-          <AccountsTable 
-            accounts={portfolioData.accounts}
-            onRefresh={refreshData}
-          />
+          (tabLoading && showSkeleton) ? (
+            <div className="card">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <AccountsTable 
+              accounts={portfolioData.accounts}
+              onRefresh={refreshData}
+            />
+          )
         )}
 
         {activeTab === 'investments' && (
-          <InvestmentsTable 
-            investments={portfolioData.investments}
-            onRefresh={refreshData}
-          />
+          (tabLoading && showSkeleton) ? (
+            <div className="card">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <InvestmentsTable 
+              investments={portfolioData.investments}
+              onRefresh={refreshData}
+            />
+          )
         )}
 
         {activeTab === 'crypto' && (
-          <CryptoTable 
-            crypto={portfolioData.crypto}
-            onRefresh={refreshData}
-          />
+          (tabLoading && showSkeleton) ? (
+            <div className="card">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <CryptoTable
+              crypto={portfolioData.crypto}
+              onRefresh={refreshData}
+            />
+          )
         )}
 
         {activeTab === 'cash' && (
-          <CashTable 
-            cash={portfolioData.cash}
-            onRefresh={refreshData}
-          />
+          (tabLoading && showSkeleton) ? (
+            <div className="card">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <CashTable
+              cash={portfolioData.cash}
+              onRefresh={refreshData}
+            />
+          )
         )}
+        </div>
       </div>
     )
 }

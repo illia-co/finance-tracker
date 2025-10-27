@@ -166,12 +166,13 @@ export default function TransactionModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Add Transaction - {assetName}
-        </h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md mx-4">
+        <div className="px-6 py-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Add Transaction - {assetName}
+          </h3>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+          <form id="transaction-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Transaction Type
@@ -298,23 +299,26 @@ export default function TransactionModal({
             />
           </div>
 
-          <div className="flex space-x-3">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-primary disabled:opacity-50"
-            >
-              {isSubmitting ? 'Adding...' : 'Add Transaction'}
-            </button>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
+        
+        <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 rounded-b-lg flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="btn-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="transaction-form"
+            disabled={isSubmitting}
+            className="btn-primary disabled:opacity-50"
+          >
+            {isSubmitting ? 'Adding...' : 'Add Transaction'}
+          </button>
+        </div>
       </div>
 
       {/* Alert Modal */}

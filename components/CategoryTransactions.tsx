@@ -30,6 +30,8 @@ interface CategoryTransactionsProps {
 export default function CategoryTransactions({ assetType, categoryName, refreshTrigger }: CategoryTransactionsProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const [showSkeleton, setShowSkeleton] = useState(false)
   const { isBalanceVisible } = useBalanceVisibility()
 
   useEffect(() => {
@@ -37,6 +39,14 @@ export default function CategoryTransactions({ assetType, categoryName, refreshT
   }, [assetType, refreshTrigger])
 
   const fetchTransactions = async () => {
+    setLoading(true)
+    setShowSkeleton(false)
+    
+    // Show skeleton only if loading takes more than 2 seconds
+    const skeletonTimeout = setTimeout(() => {
+      setShowSkeleton(true)
+    }, 2000)
+    
     try {
       const response = await fetch(`/api/transactions?assetType=${assetType}`)
       const data = await response.json()
@@ -46,6 +56,8 @@ export default function CategoryTransactions({ assetType, categoryName, refreshT
       setTransactions([])
     } finally {
       setLoading(false)
+      setIsInitialLoad(false)
+      clearTimeout(skeletonTimeout)
     }
   }
 
@@ -110,15 +122,15 @@ export default function CategoryTransactions({ assetType, categoryName, refreshT
     }
   }
 
-  if (loading) {
+  if (loading && showSkeleton) {
     return (
       <div className="card">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
           <div className="space-y-2">
-            <div className="h-3 bg-gray-200 rounded"></div>
-            <div className="h-3 bg-gray-200 rounded"></div>
-            <div className="h-3 bg-gray-200 rounded"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
       </div>

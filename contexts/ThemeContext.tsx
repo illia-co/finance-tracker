@@ -17,15 +17,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
-    // Check for saved theme preference or default to light mode
-    const savedTheme = localStorage.getItem('finance-tracker-theme') as Theme
-    if (savedTheme) {
-      setTheme(savedTheme)
-    } else {
-      // Check system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      setTheme(prefersDark ? 'dark' : 'light')
-    }
+    // Check if theme is already applied by the script in layout.tsx
+    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+    setTheme(currentTheme)
   }, [])
 
   useEffect(() => {
