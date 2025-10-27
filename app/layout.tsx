@@ -93,9 +93,6 @@ export default function RootLayout({
                     <div className="flex items-center space-x-4">
                       <BalanceToggleButton />
                       <ThemeToggle />
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Track your net worth
-                      </span>
                     </div>
                   </div>
                 </div>
